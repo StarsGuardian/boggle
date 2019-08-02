@@ -5,6 +5,7 @@ package model;
  * @author Jian Fang
  *
  */
+
 public class DiceTray {
 	/**
 	 * Construct a tray of dice using a hard coded 2D array of chars. Use this for
@@ -12,10 +13,6 @@ public class DiceTray {
 	 * 
 	 * @param newBoard The 2D array of characters used in testing
 	 */
-
-	private char[][] Board;
-	private int[][] used;
-
 	public DiceTray(char[][] newBoard) {
 		// TODO Implement this constructor
 
@@ -31,7 +28,7 @@ public class DiceTray {
 	 * @param str A word that may be in the board by connecting consecutive letters
 	 * @return True if search is found
 	 */
-	public boolean found(String attempt) {
+	public static boolean found(String attempt) {
 		// TODO: Implement this method
 		attempt = attempt.toUpperCase();
 		int i = 0;
@@ -60,7 +57,7 @@ public class DiceTray {
 		return false;
 	}
 
-	private void setZeros() {
+	private static void setZeros() {
 		int i = 0;
 		int j = 0;
 		for (i = 0; i < Board.length; i++) {
@@ -70,7 +67,7 @@ public class DiceTray {
 		}
 	}
 
-	private boolean FindNext(String attempt, int start, int r, int c) {
+	private static boolean FindNext(String attempt, int start, int r, int c) {
 		if (r < 0 || r >= Board.length || c < 0 || c >= Board[0].length)
 			return false;
 		if (start == attempt.length())
@@ -89,4 +86,7 @@ public class DiceTray {
 		used[r][c] = 0;
 		return false;
 	}
+
+	private static char[][] Board;
+	private static int[][] used;
 }
