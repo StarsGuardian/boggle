@@ -97,6 +97,7 @@ public class BoggleApp extends Application {
 		newGame.setOnAction(e -> {
 			this.CreateTray();
 			dices.setText(this.trayStr());
+			input.setText("");
 		});
 	}
 
