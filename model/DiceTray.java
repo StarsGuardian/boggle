@@ -1,12 +1,21 @@
 package model;
 
 /**
+ * Model the tray of dice in the game Boggle. A DiceTray is constructed here a
+ * 4x4 array of characters for testing.
  * 
- * @author Jian Fang
- *
+ * @author Rick Mercer
  */
-
 public class DiceTray {
+
+	private char[][] path;
+	private char[][] board;
+	public static final char TRIED = '@';
+	public static final char PART_OF_WORD = '!';
+	private String attempt;
+	private int index;
+	public static final int SIZE = 4;
+
 	/**
 	 * Construct a tray of dice using a hard coded 2D array of chars. Use this for
 	 * testing
@@ -14,11 +23,7 @@ public class DiceTray {
 	 * @param newBoard The 2D array of characters used in testing
 	 */
 	public DiceTray(char[][] newBoard) {
-		// TODO Implement this constructor
-
-		used = new int[newBoard.length][newBoard[0].length];
-		Board = newBoard;
-		setZeros();
+		board = newBoard;
 	}
 
 	/**
@@ -28,65 +33,90 @@ public class DiceTray {
 	 * @param str A word that may be in the board by connecting consecutive letters
 	 * @return True if search is found
 	 */
-	public static boolean found(String attempt) {
-		// TODO: Implement this method
-		attempt = attempt.toUpperCase();
-		int i = 0;
-		int j = 0;
-		if (attempt.length() == 17) {
-			int idx = attempt.indexOf("QU");
-			if (idx == -1)
-				return false;
-			String s = new String();
-			for (i = 0; i < attempt.length(); i++)
-				if (attempt.charAt(i) != 'U')
-					s += attempt.charAt(i);
-			attempt = s;
-		}
-
-		if (attempt.length() < 3 || attempt.length() > 16)
+	public boolean found(String str) {
+		if (str.length() < 3)
 			return false;
+		attempt = str.toUpperCase().trim();
+		boolean found = false;
+		for (int r = 0; r < SIZE; r++) {
+			for (int c = 0; c < SIZE; c++)
+				if (board[r][c] == attempt.charAt(0)) {
+					init();
+					found = recursiveSearch(r, c);
+					if (found) {
+						return true;
+					}
+				}
+		}
+		return found;
+	}
 
-		for (i = 0; i < Board.length; i++) {
-			setZeros();
-			for (j = 0; j < Board[0].length; j++) {
-				if (FindNext(attempt, 0, i, j))
-					return true;
+	// Keep a 2nd 2D array to remember the characters that have been tried
+	private void init() {
+		path = new char[SIZE][SIZE];
+		for (int r = 0; r < SIZE; r++)
+			for (int c = 0; c < SIZE; c++)
+				path[r][c] = '.';
+		index = 0;
+	}
+
+	// This is like the Obstacle course escape algorithm.
+	// Now we are checking 8 possible directions (no wraparound)
+	private boolean recursiveSearch(int r, int c) {
+		boolean found = false;
+
+		if (valid(r, c)) { // valid returns true if in range AND one letter was found
+			path[r][c] = TRIED;
+			if (board[r][c] == 'Q')
+				index += 2;
+			else
+				index++;
+
+			// Look in 8 directions for the next character
+			if (index >= attempt.length())
+				found = true;
+			else {
+				found = recursiveSearch(r - 1, c - 1);
+				if (!found)
+					found = recursiveSearch(r - 1, c);
+				if (!found)
+					found = recursiveSearch(r - 1, c + 1);
+				if (!found)
+					found = recursiveSearch(r, c - 1);
+				if (!found)
+					found = recursiveSearch(r, c + 1);
+				if (!found)
+					found = recursiveSearch(r + 1, c - 1);
+				if (!found)
+					found = recursiveSearch(r + 1, c);
+				if (!found)
+					found = recursiveSearch(r + 1, c + 1);
+				// If still not found, allow backtracking to use the same letter in a
+				// different location later as in looking for "BATTLING" in this board
+				//
+				// L T T X // Mark leftmost T as untried after it finds a 2nd T but not the L.
+				// I X A X
+				// N X X B
+				// G X X X
+				//
+				if (!found) {
+					path[r][c] = '.'; // Rick used . to mark the 2nd 2D array as TRIED
+					index--; // 1 less letter was found. Let algorithm find the right first (col 2)
+				}
+			} // End recursive case
+
+			if (found) {
+				// Mark where the letter was found. Not required, but could be used to
+				// show the actual path of the word that was found.
+				path[r][c] = board[r][c];
 			}
 		}
-		return false;
+		return found;
 	}
 
-	private static void setZeros() {
-		int i = 0;
-		int j = 0;
-		for (i = 0; i < Board.length; i++) {
-			for (j = 0; j < Board[0].length; j++) {
-				used[i][j] = 0;
-			}
-		}
+	// Determine if a current value of row and columns can or should be tried
+	private boolean valid(int r, int c) {
+		return r >= 0 && r < SIZE && c >= 0 && c < SIZE && path[r][c] != TRIED && board[r][c] == attempt.charAt(index);
 	}
 
-	private static boolean FindNext(String attempt, int start, int r, int c) {
-		if (r < 0 || r >= Board.length || c < 0 || c >= Board[0].length)
-			return false;
-		if (start == attempt.length())
-			return true;
-		if (attempt.charAt(start) != Board[r][c] || used[r][c] == 1)
-			return false;
-
-		used[r][c] = 1;
-		if (FindNext(attempt, start + 1, r + 1, c) || FindNext(attempt, start + 1, r - 1, c)
-				|| FindNext(attempt, start + 1, r, c + 1) || FindNext(attempt, start + 1, r, c - 1)
-				|| FindNext(attempt, start + 1, r + 1, c + 1) || FindNext(attempt, start + 1, r + 1, c - 1)
-				|| FindNext(attempt, start + 1, r - 1, c + 1) || FindNext(attempt, start + 1, r - 1, c - 1)) {
-			return true;
-		}
-
-		used[r][c] = 0;
-		return false;
-	}
-
-	private static char[][] Board;
-	private static int[][] used;
 }
